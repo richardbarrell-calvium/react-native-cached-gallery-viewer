@@ -107,7 +107,17 @@ class TransformableImage extends Component {
 
     if (source && source.uri) {
       new ImageCacheManager().downloadAndCacheUrl(source.uri)
-	.then(cachedUrl => new Promise((res, rej) => Image.getSize(cachedUrl, res, rej)))
+        .then(cachedUrl => {
+          console.log('hey it a cached url', cachedUrl);
+          return cachedUrl;
+        })
+        .then(
+          (cachedUrl => new Promise((res, rej) => Image.getSize(cachedUrl, res, rej))),
+          (error => {
+            console.warn('ugh downloadAndCacheUrl failed' + JSON.stringify(error));
+            throw error;
+          }),
+        )
         .then((width, height) => {
           DEV && console.log('getImageSize...width=' + width + ', height=' + height);
           if (width && height) {
@@ -119,7 +129,7 @@ class TransformableImage extends Component {
           }
         })
         .catch(error => {
-          console.error('getImageSize...error=' + JSON.stringify(error) + ', source=' + JSON.stringify(source));
+          console.warn('getImageSize...error=' + JSON.stringify(error) + ', source=' + JSON.stringify(source));
         });
     } else {
       console.warn('getImageSize...please provide pixels prop for local images');
