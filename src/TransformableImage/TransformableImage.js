@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {CachedImage} from 'react-native-cached-image';
+import {Image} from 'react-native';
+import {CachedImage, ImageCacheManager} from 'react-native-cached-image';
 
 import ViewTransformer from '../ViewTransformer/ViewTransformer';
 
@@ -105,9 +106,9 @@ class TransformableImage extends Component {
     DEV && console.log('getImageSize...' + JSON.stringify(source));
 
     if (source && source.uri) {
-      CachedImage.getSize(
-        source.uri,
-        (width, height) => {
+      new ImageCacheManager().downloadAndCacheUrl(source.uri)
+	.then(cachedUrl => new Promise((res, rej) => Image.getSize(cachedUrl, res, rej)))
+        .then((width, height) => {
           DEV && console.log('getImageSize...width=' + width + ', height=' + height);
           if (width && height) {
             if (this.state.pixels && this.state.pixels.width === width && this.state.pixels.height === height) {
@@ -116,11 +117,10 @@ class TransformableImage extends Component {
               this.setState({pixels: {width, height}});
             }
           }
-        },
-        error => {
+        })
+        .catch(error => {
           console.error('getImageSize...error=' + JSON.stringify(error) + ', source=' + JSON.stringify(source));
-        }
-      );
+        });
     } else {
       console.warn('getImageSize...please provide pixels prop for local images');
     }
